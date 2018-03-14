@@ -34,7 +34,30 @@ public class FinController {
         response = new Response();
         try {
             if (request.getSessionKey() == null) throw new RequestException();
-            data.setCurrencies(finService.getAllCurrencies());
+            data.setSysCurrencies(finService.getAllCurrencies());
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
+    /**
+     * @return
+     */
+    @PostMapping("/getUserCurrencies")
+    @HystrixCommand
+    public Response getUserCurrencies(@RequestBody Request request) {
+
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            if (request.getSessionKey() == null) throw new RequestException();
+            data.setCurrencies(finService.getAllUserCurrencies(request.getSessionKey()));
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
@@ -53,7 +76,7 @@ public class FinController {
         response = new Response();
         try {
             if (request.getSessionKey() == null) throw new RequestException();
-            data.setCurrency(finService.getCurrencyByCode(request.getCurrencyCode()));
+            data.setCurrency(finService.getUserCurrencyByCode(request.getSessionKey(), request.getCurrencyCode()));
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
@@ -62,7 +85,7 @@ public class FinController {
         finService.writeResponseLog(log, method, request.getSessionKey(), response);
         return response;
     }
-
+/*
     @PostMapping("/getCurrencyByShortDecription")
     @HystrixCommand
     public Response getCurrencyByShortDecription(@RequestBody Request request) {
@@ -81,7 +104,7 @@ public class FinController {
         finService.writeResponseLog(log, method, request.getSessionKey(), response);
         return response;
     }
-
+*/
     @PutMapping("/addCurrency")
     @HystrixCommand
     public Response addCurrency(@RequestBody Request request) {
@@ -93,9 +116,8 @@ public class FinController {
             if (request.getSessionKey() == null) throw new RequestException();
             data.setNewId(
                     finService.addCurrency(
-                            request.getCurrencyCode(),
-                            request.getCurrencyShortDescription(),
-                            request.getCurrencyDescription()
+                            request.getSessionKey(),
+                            request.getCurrencyCode()
                     )
             );
             response.setData(data);
@@ -116,7 +138,7 @@ public class FinController {
         response = new Response();
         try {
             if (request.getSessionKey() == null) throw new RequestException();
-            data.setRate(finService.getRateForDate(request.getCurrencyCode(), request.getRateDate()));
+            data.setRate(finService.getRateForDate(request.getSessionKey(), request.getCurrencyCode(), request.getRateDate()));
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
@@ -154,7 +176,7 @@ public class FinController {
         response = new Response();
         try {
             if (request.getSessionKey() == null) throw new RequestException();
-            finService.addRate(request.getCurrencyCode(), request.getRateDate(), request.getRate());
+            finService.addRate(request.getSessionKey(), request.getCurrencyCode(), request.getRateDate(), request.getRate());
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
@@ -163,7 +185,6 @@ public class FinController {
         finService.writeResponseLog(log, method, request.getSessionKey(), response);
         return response;
     }
-
 
     @PostMapping("/login")
     @HystrixCommand
@@ -175,6 +196,24 @@ public class FinController {
         try {
             Session session = finService.getSessionByLoginPassword(request.getLogin(), request.getPassword());
             data.setSessionKey(session.getSessionKey());
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
+    @PostMapping("/logoff")
+    @HystrixCommand
+    public Response logoff(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            finService.logoff(request.getSessionKey());
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
