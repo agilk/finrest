@@ -10,7 +10,7 @@ public class Rate {
 
     @ManyToOne
     @JoinColumn (name = "currency_id")
-    private Currency currency;
+    private UserCurrency currency;
 
     private String ctime;
 
@@ -24,11 +24,11 @@ public class Rate {
         this.id = id;
     }
 
-    public Currency getCurrency() {
+    public UserCurrency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(Currency currency) {
+    public void setCurrency(UserCurrency currency) {
         this.currency = currency;
     }
 
@@ -50,6 +50,6 @@ public class Rate {
 
     @Override
     public String toString() {
-        return currency.getCode()+"("+ctime+": "+rate+")";
+        return currency.getCurrency().getCode()+"("+ctime+": "+rate+")";
     }
 }

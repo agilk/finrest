@@ -14,7 +14,7 @@ public class Wallet {
 
     @ManyToOne
     @JoinColumn(name = "currency_id")
-    private Currency currency;
+    private UserCurrency currency;
 
     @Column(name = "custom_name")
     private String customName;
@@ -38,11 +38,11 @@ public class Wallet {
         this.user = user;
     }
 
-    public Currency getCurrency() {
+    public UserCurrency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(Currency currency) {
+    public void setCurrency(UserCurrency currency) {
         this.currency = currency;
     }
 
@@ -64,6 +64,6 @@ public class Wallet {
 
     @Override
     public String toString() {
-        return user.getLogin()+"("+customName+"-["+balanceAmount+" "+currency.getShortDescription()+"]"+")";
+        return user.getLogin()+"("+customName+"-["+balanceAmount+" "+currency.getCurrency().getShortDescription()+"]"+")";
     }
 }

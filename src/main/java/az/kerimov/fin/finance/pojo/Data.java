@@ -1,18 +1,13 @@
 package az.kerimov.fin.finance.pojo;
 
-import az.kerimov.fin.finance.finamance.Currency;
-import az.kerimov.fin.finance.finamance.Rate;
-import az.kerimov.fin.finance.finamance.User;
-import az.kerimov.fin.finance.finamance.Wallet;
-import az.kerimov.fin.finance.finamance.Category;
-import az.kerimov.fin.finance.finamance.SubCategory;
-import az.kerimov.fin.finance.finamance.Orientation;
+import az.kerimov.fin.finance.finamance.*;
 
 import java.util.List;
 
 public class Data {
-    private List<Currency> currencies;
-    private Currency currency;
+    private List<Currency> sysCurrencies;
+    private List<UserCurrency> currencies;
+    private UserCurrency currency;
     private List<Rate> rates;
     private Rate rate;
 
@@ -29,19 +24,19 @@ public class Data {
     private SubCategory subCategory;
     private List<SubCategory> subCategories;
 
-    public List<Currency> getCurrencies() {
+    public List<UserCurrency> getCurrencies() {
         return currencies;
     }
 
-    public void setCurrencies(List<Currency> currencies) {
+    public void setCurrencies(List<UserCurrency> currencies) {
         this.currencies = currencies;
     }
 
-    public Currency getCurrency() {
+    public UserCurrency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(Currency currency) {
+    public void setCurrency(UserCurrency currency) {
         this.currency = currency;
     }
 
@@ -147,5 +142,13 @@ public class Data {
 
     public void setSubCategories(List<SubCategory> subCategories) {
         this.subCategories = subCategories;
+    }
+
+    public List<Currency> getSysCurrencies() {
+        return sysCurrencies;
+    }
+
+    public void setSysCurrencies(List<Currency> sysCurrencies) {
+        this.sysCurrencies = sysCurrencies;
     }
 }

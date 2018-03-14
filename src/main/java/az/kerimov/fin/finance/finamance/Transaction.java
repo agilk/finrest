@@ -31,7 +31,7 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "currency_id")
-    private Currency currency;
+    private UserCurrency currency;
 
     private Double amount;
 
@@ -91,11 +91,11 @@ public class Transaction {
         this.walletOther = walletOther;
     }
 
-    public Currency getCurrency() {
+    public UserCurrency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(Currency currency) {
+    public void setCurrency(UserCurrency currency) {
         this.currency = currency;
     }
 
