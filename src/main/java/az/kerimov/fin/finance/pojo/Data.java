@@ -32,7 +32,7 @@ public class Data {
         this.currencies = currencies;
     }
 
-    public UserCurrency getCurrency() {
+    public UserCurrency getUserCurrency() {
         return currency;
     }
 

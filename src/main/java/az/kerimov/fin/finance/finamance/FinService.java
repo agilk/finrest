@@ -205,13 +205,13 @@ public class FinService {
     }
 
     public User getUserBySessionKey(String sessionKey) throws UserNotFoundException {
-        Session session = sessionRepository.findBySessionKeyAndActive(sessionKey, true);
+        Session session = sessionRepository.findBySessionKeyAndActiveIsTrue(sessionKey);
         if (session.getUser() == null) throw new UserNotFoundException();
         return session.getUser();
     }
 
     public void setAllSessionsInActive(User user) {
-        List<Session> sessions = sessionRepository.findAllByUserAndActive(user, true);
+        List<Session> sessions = sessionRepository.findAllByUserAndActiveIsTrue(user);
         for (int i = 0; i < sessions.size(); i++) {
             sessions.get(i).setActive(false);
             sessionRepository.save(sessions.get(i));

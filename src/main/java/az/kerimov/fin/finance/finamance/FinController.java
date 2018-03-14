@@ -1,6 +1,7 @@
 package az.kerimov.fin.finance.finamance;
 
 import az.kerimov.fin.finance.exception.RequestException;
+import az.kerimov.fin.finance.exception.UserNotFoundException;
 import az.kerimov.fin.finance.pojo.Error;
 import az.kerimov.fin.finance.pojo.Data;
 import az.kerimov.fin.finance.pojo.Response;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import az.kerimov.fin.finance.pojo.Request;
 
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -188,7 +190,7 @@ public class FinController {
 
     @PostMapping("/login")
     @HystrixCommand
-    public Response login(@RequestBody Request request) {
+    public Response login(@RequestBody Request request) throws RequestException, UserNotFoundException, NoSuchAlgorithmException {
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
         Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
         data = new Data();
@@ -199,7 +201,7 @@ public class FinController {
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
-            response.setError(error);
+           response.setError(error);
         }
         finService.writeResponseLog(log, method, request.getSessionKey(), response);
         return response;

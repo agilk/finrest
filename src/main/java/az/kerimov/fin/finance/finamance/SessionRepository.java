@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface SessionRepository extends JpaRepository<Session, Integer> {
-    public Session findBySessionKeyAndActive(String sessionKey, boolean active);
-    public List<Session> findAllByUserAndActive(User user, Boolean active);
+    Session findBySessionKeyAndActiveIsTrue(String sessionKey);
+    List<Session> findAllByUserAndActiveIsTrue(User user);
 }
