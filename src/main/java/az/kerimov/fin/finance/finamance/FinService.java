@@ -222,6 +222,15 @@ public class FinService {
         setAllSessionsInActive(getUserBySessionKey(sessionKey));
     }
 
+    public void changePassword(User user, String newPassword){
+        user.setPassword(newPassword);
+        userRepository.save(user);
+    }
+
+    public void changePassword(String sessionKey, String newPassword) throws UserNotFoundException {
+        changePassword(getUserBySessionKey(sessionKey), newPassword);
+    }
+
     public void addUser(User user) throws UserExistsException {
         try {
             userRepository.save(user);

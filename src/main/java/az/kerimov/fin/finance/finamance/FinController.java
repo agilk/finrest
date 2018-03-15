@@ -225,6 +225,24 @@ public class FinController {
         return response;
     }
 
+    @PostMapping("/changePassword")
+    @HystrixCommand
+    public Response changePassword(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            finService.changePassword(request.getSessionKey(), request.getPassword());
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
     @PostMapping("/getUserBySession")
     @HystrixCommand
     public Response getUserBySession(@RequestBody Request request) {
