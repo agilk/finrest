@@ -2,17 +2,16 @@ package az.kerimov.fin.finance.finamance;
 
 import az.kerimov.fin.finance.exception.RequestException;
 import az.kerimov.fin.finance.exception.UserNotFoundException;
-import az.kerimov.fin.finance.pojo.Error;
 import az.kerimov.fin.finance.pojo.Data;
+import az.kerimov.fin.finance.pojo.Error;
+import az.kerimov.fin.finance.pojo.Request;
 import az.kerimov.fin.finance.pojo.Response;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import az.kerimov.fin.finance.pojo.Request;
 
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.util.Date;
 
 @RestController
 public class FinController {
@@ -121,6 +120,52 @@ public class FinController {
                             request.getSessionKey(),
                             request.getCurrencyCode()
                     )
+            );
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
+    @DeleteMapping("deleteCurrency")
+    @HystrixCommand
+    public Response deleteCurrency(@RequestBody Request request){
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            if (request.getSessionKey() == null) throw new RequestException();
+            finService.deleteCurrency(
+                    request.getSessionKey(),
+                    request.getCurrencyCode()
+
+            );
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
+    @PostMapping("setDefaultCurrency")
+    @HystrixCommand
+    public Response setDefaultCurrency(@RequestBody Request request){
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            if (request.getSessionKey() == null) throw new RequestException();
+            finService.setDefaultCurrency(
+                    request.getSessionKey(),
+                    request.getCurrencyCode()
+
             );
             response.setData(data);
         } catch (Exception ex) {
@@ -310,6 +355,29 @@ public class FinController {
             data.setNewId(
                     finService.addWallet(request.getSessionKey(), request.getCurrencyCode(), request.getCustomName())
             );
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
+    @PostMapping("setDefaultWallet")
+    @HystrixCommand
+    public Response setDefaultWallet(@RequestBody Request request){
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            if (request.getSessionKey() == null) throw new RequestException();
+            finService.setDefaultWallet(
+                    request.getSessionKey(),
+                    request.getWalletId()
+
+            );
+            response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
             response.setError(error);

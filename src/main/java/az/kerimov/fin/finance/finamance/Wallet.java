@@ -22,6 +22,17 @@ public class Wallet {
     @Column(name = "balance")
     private Double balanceAmount;
 
+    @Column(name = "is_default")
+    private boolean defaultElement;
+
+    public boolean isDefaultElement() {
+        return defaultElement;
+    }
+
+    public void setDefaultElement(boolean defaultElement) {
+        this.defaultElement = defaultElement;
+    }
+
     public Integer getId() {
         return id;
     }

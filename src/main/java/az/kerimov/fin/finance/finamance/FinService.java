@@ -123,7 +123,7 @@ public class FinService {
     }
 
     public List<UserCurrency> getAllUserCurrencies(String sessionKey) throws UserNotFoundException {
-        return userCurrencyRepository.findAllByUser(getUserBySessionKey(sessionKey));
+        return userCurrencyRepository.findAllByUserAndActiveIsTrue(getUserBySessionKey(sessionKey));
     }
 
     public UserCurrency getUserCurrencyByCode(String sessionKey, String code) throws UserNotFoundException {
@@ -143,7 +143,43 @@ public class FinService {
         UserCurrency currency = new UserCurrency();
         currency.setUser(getUserBySessionKey(sessionKey));
         currency.setCurrency(currencyRepository.findByCode(currencyCode));
+        UserCurrency existCurr = userCurrencyRepository.findByUserAndCurrency(currency.getUser(), currency.getCurrency());
+        if (existCurr != null){
+            currency.setId(existCurr.getId());
+            currency.setActive(true);
+        }
         return addCurrency(currency);
+    }
+
+    public Integer setDefaultCurrency(UserCurrency currency){
+        List<UserCurrency> userCurrencies = userCurrencyRepository.findAllByUserAndActiveIsTrueAndDefaultElementIsTrue(currency.getUser());
+        for (int i = 0; i < userCurrencies.size(); i++){
+            userCurrencies.get(i).setDefaultElement(false);
+            try {
+                userCurrencyRepository.save(userCurrencies.get(i));
+            }catch (Exception e){
+                System.out.println("Error "+e.getMessage());
+            }
+        }
+        currency.setDefaultElement(true);
+        userCurrencyRepository.save(currency);
+        return currency.getId();
+    }
+
+    public Integer setDefaultCurrency(String sessionKey, String currencyCode) throws UserNotFoundException {
+        UserCurrency currency = userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode));
+        return setDefaultCurrency(currency);
+    }
+
+    public void deleteCurrency(UserCurrency currency){
+        currency.setActive(false);
+        currency.setDefaultElement(false);
+        userCurrencyRepository.save(currency);
+    }
+
+    public void deleteCurrency(String sessionKey, String currencyCode) throws UserNotFoundException{
+        UserCurrency currency = userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode));
+        deleteCurrency(currency);
     }
 
     public Log writeRequestLog(String method, String sessionKey, Request request) {
@@ -262,6 +298,28 @@ public class FinService {
         wallet.setCustomName(customName);
         return addWallet(wallet);
     }
+
+    public Integer setDefaultWallet(Wallet wallet){
+        List<Wallet> wallets = walletRepository.findAllByUserAndDefaultElementIsTrue(wallet.getUser());
+        for (int i = 0; i < wallets.size(); i++){
+            wallets.get(i).setDefaultElement(false);
+            try {
+                walletRepository.save(wallets.get(i));
+            }catch (Exception e){
+                System.out.println("Error "+e.getMessage());
+            }
+        }
+        wallet.setDefaultElement(true);
+        walletRepository.save(wallet);
+        return wallet.getId();
+    }
+
+    public Integer setDefaultWallet(String sessionKey, Integer walletId) throws UserNotFoundException {
+        Wallet wallet = walletRepository.findByIdAndUser(walletId, getUserBySessionKey(sessionKey));
+
+        return setDefaultWallet(wallet);
+    }
+
 
     public Wallet changeWalletBalance(Wallet wallet, Double balance) {
         wallet.setBalanceAmount(balance);

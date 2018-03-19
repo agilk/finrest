@@ -17,6 +17,20 @@ public class UserCurrency {
     @JoinColumn(name = "currency_id")
     private Currency currency;
 
+    @Column(name = "is_active")
+    private boolean active;
+
+    @Column(name = "is_default")
+    private boolean defaultElement;
+
+    public boolean isDefaultElement() {
+        return defaultElement;
+    }
+
+    public void setDefaultElement(boolean defaultElement) {
+        this.defaultElement = defaultElement;
+    }
+
     public Integer getId() {
         return id;
     }
@@ -39,5 +53,13 @@ public class UserCurrency {
 
     public void setCurrency(Currency currency) {
         this.currency = currency;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

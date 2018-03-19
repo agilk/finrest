@@ -27,7 +27,7 @@ public class Request {
     private Integer orientationId;
     private Integer categoryId;
     private Integer subCategoryId;
-    private boolean debt;
+    private Boolean debt;
 
     //for Transactions
     private Double amount;
@@ -39,6 +39,7 @@ public class Request {
     //Common
     private String lang;
     private String sessionKey;
+    private Boolean defaultElement;
 
     public String getCurrencyCode() throws RequestException  {
         if (currencyCode == null) throw new RequestException();
@@ -178,11 +179,11 @@ public class Request {
         this.subCategoryId = subCategoryId;
     }
 
-    public boolean isDebt() {
+    public Boolean isDebt() {
         return debt;
     }
 
-    public void setDebt(boolean debt) {
+    public void setDebt(Boolean debt) {
         this.debt = debt;
     }
 
@@ -250,5 +251,17 @@ public class Request {
 
     public void setMobilePhone(String mobilePhone) {
         this.mobilePhone = mobilePhone;
+    }
+
+    public Boolean getDebt() {
+        return debt;
+    }
+
+    public Boolean getDefault() {
+        return defaultElement;
+    }
+
+    public void setDefault(Boolean defaultElement) {
+        this.defaultElement = defaultElement;
     }
 }
