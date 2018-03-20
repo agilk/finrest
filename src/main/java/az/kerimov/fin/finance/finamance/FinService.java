@@ -1,15 +1,12 @@
 package az.kerimov.fin.finance.finamance;
 
 import az.kerimov.fin.finance.exception.AddCurrencyException;
-import az.kerimov.fin.finance.exception.UserExistsException;
 import az.kerimov.fin.finance.exception.UserNotFoundException;
 import az.kerimov.fin.finance.pojo.Request;
 import az.kerimov.fin.finance.pojo.Response;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionSystemException;
 
 import javax.transaction.Transactional;
 import java.security.MessageDigest;
@@ -53,27 +50,26 @@ public class FinService {
 
     private DateFormat dfTransaction = new SimpleDateFormat("yyyyMMdd");
 
+/*
     public String getLatestRateDate() throws ParseException {
         List<Rate> rates = rateRepository.findAll();
-        String result = "";
         Date currentDate = new Date(0);
         Date rateDate;
-        for (int i = 0; i < rates.size(); i++) {
-            rateDate = df.parse(rates.get(i).getCtime());
+        for (Rate rate : rates) {
+            rateDate = df.parse(rate.getCtime());
             if (currentDate.getTime() < rateDate.getTime()) {
                 currentDate = rateDate;
             }
         }
         return df.format(currentDate);
     }
-
-    public String getCurrencyLatestRateDate(UserCurrency currency, String ctime) throws ParseException {
+*/
+    private String getCurrencyLatestRateDate(UserCurrency currency, String ctime) throws ParseException {
         List<Rate> rates = rateRepository.findByCurrencyAndCtimeIsLessThanEqual(currency, ctime);
-        String result = "";
         Date currentDate = new Date(0);
         Date rateDate;
-        for (int i = 0; i < rates.size(); i++) {
-            rateDate = df.parse(rates.get(i).getCtime());
+        for (Rate rate : rates) {
+            rateDate = df.parse(rate.getCtime());
             if (currentDate.getTime() < rateDate.getTime()) {
                 currentDate = rateDate;
             }
@@ -81,12 +77,12 @@ public class FinService {
         return df.format(currentDate);
     }
 
-    public Rate getRateForDate(UserCurrency currency, String date) throws ParseException {
+    private Rate getRateForDate(UserCurrency currency, String date) throws ParseException {
         return rateRepository.findByCurrencyAndCtime(currency,
                 getCurrencyLatestRateDate(currency, date));
     }
 
-    public Rate getRateForDate(UserCurrency currency, Date date) throws ParseException {
+    private Rate getRateForDate(UserCurrency currency, Date date) throws ParseException {
         return getRateForDate(currency, df.format(date));
     }
 
@@ -99,14 +95,14 @@ public class FinService {
     public List<Rate> getLatestRates() throws ParseException {
         List<UserCurrency> currencies = userCurrencyRepository.findAll();
         List<Rate> rates = new ArrayList<>();
-        for (int i = 0; i < currencies.size(); i++) {
-            if (currencies.get(i).getId() != 0)
-                rates.add(getRateForDate(currencies.get(i), new Date()));
+        for (UserCurrency currency : currencies) {
+            if (currency.getId() != 0)
+                rates.add(getRateForDate(currency, new Date()));
         }
         return rates;
     }
 
-    public void addRate(String sessionKey, UserCurrency currency, String date, Double rate) throws UserNotFoundException {
+    private void addRate(UserCurrency currency, String date, Double rate) {
         Rate result = new Rate();
         result.setCurrency(currency);
         result.setCtime(date);
@@ -115,7 +111,7 @@ public class FinService {
     }
 
     public void addRate(String sessionKey, String currencyCode, String date, Double rate) throws UserNotFoundException {
-        addRate(sessionKey, userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode)), date, rate);
+        addRate(userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode)), date, rate);
     }
 
     public List<Currency> getAllCurrencies() {
@@ -130,7 +126,7 @@ public class FinService {
         return userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(code));
     }
 
-    public Integer addCurrency(UserCurrency currency) throws AddCurrencyException {
+    private Integer addCurrency(UserCurrency currency) throws AddCurrencyException {
         try {
             userCurrencyRepository.save(currency);
             return currency.getId();
@@ -143,35 +139,35 @@ public class FinService {
         UserCurrency currency = new UserCurrency();
         currency.setUser(getUserBySessionKey(sessionKey));
         currency.setCurrency(currencyRepository.findByCode(currencyCode));
+        currency.setActive(true);
         UserCurrency existCurr = userCurrencyRepository.findByUserAndCurrency(currency.getUser(), currency.getCurrency());
         if (existCurr != null){
             currency.setId(existCurr.getId());
-            currency.setActive(true);
         }
         return addCurrency(currency);
     }
 
-    public Integer setDefaultCurrency(UserCurrency currency){
+    private void setDefaultCurrency(UserCurrency currency){
         List<UserCurrency> userCurrencies = userCurrencyRepository.findAllByUserAndActiveIsTrueAndDefaultElementIsTrue(currency.getUser());
-        for (int i = 0; i < userCurrencies.size(); i++){
-            userCurrencies.get(i).setDefaultElement(false);
+        for (UserCurrency userCurrency : userCurrencies) {
+            userCurrency.setDefaultElement(false);
             try {
-                userCurrencyRepository.save(userCurrencies.get(i));
-            }catch (Exception e){
-                System.out.println("Error "+e.getMessage());
+                userCurrencyRepository.save(userCurrency);
+            } catch (Exception e) {
+                System.out.println("Error " + e.getMessage());
             }
         }
         currency.setDefaultElement(true);
         userCurrencyRepository.save(currency);
-        return currency.getId();
+        //return currency.getId();
     }
 
-    public Integer setDefaultCurrency(String sessionKey, String currencyCode) throws UserNotFoundException {
+    public void setDefaultCurrency(String sessionKey, String currencyCode) throws UserNotFoundException {
         UserCurrency currency = userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode));
-        return setDefaultCurrency(currency);
+        setDefaultCurrency(currency);
     }
 
-    public void deleteCurrency(UserCurrency currency){
+    private void deleteCurrency(UserCurrency currency){
         currency.setActive(false);
         currency.setDefaultElement(false);
         userCurrencyRepository.save(currency);
@@ -196,7 +192,7 @@ public class FinService {
         return log;
     }
 
-    public Log writeResponseLog(Log logParent, String method, String sessionKey, Response response) {
+    public void writeResponseLog(Log logParent, String method, String sessionKey, Response response) {
         Log log = new Log();
         Gson gson = new Gson();
         String logString = gson.toJson(response);
@@ -208,16 +204,15 @@ public class FinService {
         log.setSessionKey(sessionKey);
         log.setParentLog(logParent.getId());
         logRepository.save(log);
-        return log;
     }
 
 
-    public String generateSessionKey() throws NoSuchAlgorithmException {
+    private String generateSessionKey() throws NoSuchAlgorithmException {
         MessageDigest instance = MessageDigest.getInstance("MD5");
         byte[] messageDigest = instance.digest(String.valueOf(System.nanoTime()).getBytes());
         StringBuilder hexString = new StringBuilder();
-        for (int i = 0; i < messageDigest.length; i++) {
-            String hex = Integer.toHexString(0xFF & messageDigest[i]);
+        for (byte aMessageDigest : messageDigest) {
+            String hex = Integer.toHexString(0xFF & aMessageDigest);
             if (hex.length() == 1) {
                 // could use a for loop, but we're only dealing with a single
                 // byte
@@ -246,11 +241,11 @@ public class FinService {
         return session.getUser();
     }
 
-    public void setAllSessionsInActive(User user) {
+    private void setAllSessionsInActive(User user) {
         List<Session> sessions = sessionRepository.findAllByUserAndActiveIsTrue(user);
-        for (int i = 0; i < sessions.size(); i++) {
-            sessions.get(i).setActive(false);
-            sessionRepository.save(sessions.get(i));
+        for (Session session : sessions) {
+            session.setActive(false);
+            sessionRepository.save(session);
         }
     }
 
@@ -258,7 +253,7 @@ public class FinService {
         setAllSessionsInActive(getUserBySessionKey(sessionKey));
     }
 
-    public void changePassword(User user, String newPassword){
+    private void changePassword(User user, String newPassword){
         user.setPassword(newPassword);
         userRepository.save(user);
     }
@@ -267,16 +262,8 @@ public class FinService {
         changePassword(getUserBySessionKey(sessionKey), newPassword);
     }
 
-    public void addUser(User user) throws UserExistsException {
-        try {
-            userRepository.save(user);
-        } catch (DataIntegrityViolationException | TransactionSystemException e) {
-            throw new UserExistsException();
-        }
-    }
-
-    public List<Wallet> getUserWallets(User user) {
-        return walletRepository.findByUser(user);
+    private List<Wallet> getUserWallets(User user) {
+        return walletRepository.findByUserAndActiveIsTrue(user);
     }
 
     public List<Wallet> getUserWallets(String sessionKey) throws UserNotFoundException {
@@ -284,7 +271,17 @@ public class FinService {
         return getUserWallets(user);
     }
 
-    public Integer addWallet(Wallet wallet) {
+    private void deleteWallet(Wallet wallet){
+        wallet.setActive(false);
+        walletRepository.save(wallet);
+    }
+
+    public void deleteWallet(String sessionKey, Integer walletId) throws UserNotFoundException {
+        deleteWallet(getWalletById(sessionKey, walletId));
+    }
+
+    private Integer addWallet(Wallet wallet) {
+        wallet.setActive(true);
         walletRepository.save(wallet);
         return wallet.getId();
     }
@@ -299,25 +296,25 @@ public class FinService {
         return addWallet(wallet);
     }
 
-    public Integer setDefaultWallet(Wallet wallet){
+    private void setDefaultWallet(Wallet wallet){
         List<Wallet> wallets = walletRepository.findAllByUserAndDefaultElementIsTrue(wallet.getUser());
-        for (int i = 0; i < wallets.size(); i++){
-            wallets.get(i).setDefaultElement(false);
+        for (Wallet wallet1 : wallets) {
+            wallet1.setDefaultElement(false);
             try {
-                walletRepository.save(wallets.get(i));
-            }catch (Exception e){
-                System.out.println("Error "+e.getMessage());
+                walletRepository.save(wallet1);
+            } catch (Exception e) {
+                System.out.println("Error " + e.getMessage());
             }
         }
         wallet.setDefaultElement(true);
         walletRepository.save(wallet);
-        return wallet.getId();
+        //return wallet.getId();
     }
 
-    public Integer setDefaultWallet(String sessionKey, Integer walletId) throws UserNotFoundException {
+    public void setDefaultWallet(String sessionKey, Integer walletId) throws UserNotFoundException {
         Wallet wallet = walletRepository.findByIdAndUser(walletId, getUserBySessionKey(sessionKey));
 
-        return setDefaultWallet(wallet);
+        setDefaultWallet(wallet);
     }
 
 
@@ -331,44 +328,61 @@ public class FinService {
         return walletRepository.findByIdAndUser(id, getUserBySessionKey(sessionKey));
     }
 
-    private Wallet getWalletById(Integer id) throws UserNotFoundException {
-        return walletRepository.findById(id);
+    private Wallet getWalletById(Integer id, User user)  {
+        return walletRepository.findByIdAndUser(id, user);
     }
 
-    public List<Category> getCategories(User user) {
-        List<Category> categories = categoryRepository.findByUser(user);
-        return categories;
+    private List<Category> getCategories(User user) {
+        return categoryRepository.findByUserAndActiveIsTrue(user);
     }
 
     public List<Category> getCategories(String sessionKey) throws UserNotFoundException {
         return getCategories(getUserBySessionKey(sessionKey));
     }
 
-    public List<SubCategory> getSubCategories(User user, Category category) {
-        return subCategoryRepository.findByUserAndCategory(user, category);
+    private List<SubCategory> getSubCategories(User user, Category category) {
+        return subCategoryRepository.findByUserAndCategoryAndActiveIsTrue(user, category);
     }
 
-    public List<SubCategory> getSubCategories(String sessionKey, Integer categoryId) throws ParseException, UserNotFoundException {
-        return getSubCategories(getUserBySessionKey(sessionKey), getCategoryById(categoryId));
+    public List<SubCategory> getSubCategories(String sessionKey, Integer categoryId) throws UserNotFoundException {
+        return getSubCategories(getUserBySessionKey(sessionKey), getCategoryById(categoryId, getUserBySessionKey(sessionKey)));
     }
 
-    public Category getCategoryById(Integer id) {
-        return categoryRepository.findById(id);
+    private Category getCategoryById(Integer id, User user) {
+        return categoryRepository.findByIdAndUser(id, user);
     }
 
-    public SubCategory getSubCategoryById(Integer id) {
-        return subCategoryRepository.findById(id);
+    public Category getCategoryById(Integer id, String sessionKey) throws UserNotFoundException {
+        return categoryRepository.findByIdAndUser(id, getUserBySessionKey(sessionKey));
+    }
+
+    private SubCategory getSubCategoryById(Integer id, User user) {
+        return subCategoryRepository.findByIdAndUser(id, user);
+    }
+
+    public SubCategory getSubCategoryById(Integer id, String sessionKey) throws UserNotFoundException {
+        return subCategoryRepository.findByIdAndUser(id, getUserBySessionKey(sessionKey));
     }
 
     public List<Orientation> getOrientations() {
         return orientationRepository.findAll();
     }
 
-    public Orientation getOrientationById(Integer id) {
+    private Orientation getOrientationById(Integer id) {
         return orientationRepository.findById(id);
     }
 
-    public Integer addCategory(Category category) {
+    private void deleteCategory(Category category){
+        category.setActive(false);
+        categoryRepository.save(category);
+    }
+
+    public void deleteCategory(String sessionKey, Integer categoryId) throws UserNotFoundException {
+        deleteCategory(getCategoryById(categoryId, getUserBySessionKey(sessionKey)));
+    }
+
+    private Integer addCategory(Category category) {
+        category.setActive(true);
         categoryRepository.save(category);
         return category.getId();
     }
@@ -382,21 +396,31 @@ public class FinService {
         return addCategory(category);
     }
 
-    public Integer addSubCategory(SubCategory subCategory) {
+    private void deleteSubCategory(SubCategory subCategory){
+        subCategory.setActive(false);
+        subCategoryRepository.save(subCategory);
+    }
+
+    public void deleteSubCategory(String sessionKey, Integer subCategoryId) throws UserNotFoundException {
+        deleteSubCategory(getSubCategoryById(subCategoryId, getUserBySessionKey(sessionKey)));
+    }
+
+    private Integer addSubCategory(SubCategory subCategory) {
+        subCategory.setActive(true);
         subCategoryRepository.save(subCategory);
         return subCategory.getId();
     }
 
     public Integer addSubCategory(String sessionKey, Integer categoryId, String name) throws UserNotFoundException {
         SubCategory subCategory = new SubCategory();
-        subCategory.setCategory(getCategoryById(categoryId));
+        subCategory.setCategory(getCategoryById(categoryId, getUserBySessionKey(sessionKey)));
         subCategory.setName(name);
         subCategory.setUser(getUserBySessionKey(sessionKey));
         return addSubCategory(subCategory);
     }
 
 
-    public Integer addTransaction(Transaction transaction) throws ParseException {
+    private Integer addTransaction(Transaction transaction) throws ParseException {
         transactionRepository.save(transaction);
         Double balanceChange = calculateTransactionAmount(transaction, true);
         changeWalletBalance(transaction.getWallet(), transaction.getWallet().getBalanceAmount() - balanceChange);
@@ -423,35 +447,23 @@ public class FinService {
         Transaction transaction = new Transaction();
         transaction.setAdded(new Date());
         transaction.setUser(getUserBySessionKey(sessionKey));
-        transaction.setCategory(getCategoryById(categoryId));
-        transaction.setSubCategory(getSubCategoryById(subCategoryId));
+        transaction.setCategory(getCategoryById(categoryId, getUserBySessionKey(sessionKey)));
+        transaction.setSubCategory(getSubCategoryById(subCategoryId, getUserBySessionKey(sessionKey)));
         transaction.setCurrency(getUserCurrencyByCode(sessionKey, currencyCode));
         transaction.setAmount(amount);
         transaction.setNotes(notes);
         transaction.setCdate(date);
         transaction.setCtime(dfTransactionDate.parse(date));
-        transaction.setWallet(getWalletById(walletId));
+        transaction.setWallet(getWalletById(walletId, getUserBySessionKey(sessionKey)));
         if (walletIdOther != null) {
-            transaction.setWalletOther(getWalletById(walletIdOther));
+            transaction.setWalletOther(getWalletById(walletIdOther, getUserBySessionKey(sessionKey)));
         }
         return addTransaction(transaction);
     }
 
-    public List<Transaction> getAllTransactions() {
-        return transactionRepository.findAll();
-    }
-
-    public Transaction getTransactionById(Integer id){
-        return transactionRepository.findById(id);
-    }
-
-    public Double calculateTransactionAmount(Transaction transaction) throws ParseException {
-        return calculateTransactionAmount(transaction, true);
-    }
-
-    public Double calculateTransactionAmount(Transaction transaction, boolean debtWallet) throws ParseException {
+    private Double calculateTransactionAmount(Transaction transaction, boolean debtWallet) throws ParseException {
         Integer sign = transaction.getCategory().getOrientation().getSign();
-        UserCurrency walletCurrency = null;
+        UserCurrency walletCurrency;
         if (debtWallet)
             walletCurrency = transaction.getWallet().getCurrency();
         else {

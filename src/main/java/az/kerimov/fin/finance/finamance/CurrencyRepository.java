@@ -9,5 +9,4 @@ import java.util.List;
 public interface CurrencyRepository extends JpaRepository<Currency, Integer> {
     List<Currency> findAllByIdGreaterThan(Integer id);
     Currency findByCode(String code);
-    Currency findByShortDescription(String shortDescription);
 }

@@ -9,7 +9,6 @@ import java.util.List;
 public interface RateRepository extends JpaRepository<Rate, Integer>{
     Rate findByCurrencyAndCtime(UserCurrency currency, String ctime);
     List<Rate> findByCurrencyAndCtimeIsLessThanEqual(UserCurrency currency, String ctime);
-    List<Rate> findByCtime(String ctime);
 
 
 }

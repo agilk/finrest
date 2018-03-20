@@ -18,6 +18,17 @@ public class SubCategory {
 
     private String name;
 
+    @Column(name = "is_active")
+    private boolean active;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public Integer getId() {
         return id;
     }

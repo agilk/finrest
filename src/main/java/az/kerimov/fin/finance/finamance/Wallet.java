@@ -25,6 +25,17 @@ public class Wallet {
     @Column(name = "is_default")
     private boolean defaultElement;
 
+    @Column(name = "is_active")
+    private boolean active;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public boolean isDefaultElement() {
         return defaultElement;
     }

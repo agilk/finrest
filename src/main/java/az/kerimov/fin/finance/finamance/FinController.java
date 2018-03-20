@@ -1,7 +1,6 @@
 package az.kerimov.fin.finance.finamance;
 
 import az.kerimov.fin.finance.exception.RequestException;
-import az.kerimov.fin.finance.exception.UserNotFoundException;
 import az.kerimov.fin.finance.pojo.Data;
 import az.kerimov.fin.finance.pojo.Error;
 import az.kerimov.fin.finance.pojo.Request;
@@ -10,8 +9,6 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.NoSuchAlgorithmException;
-import java.text.ParseException;
 
 @RestController
 public class FinController {
@@ -23,7 +20,7 @@ public class FinController {
     private Error error = new Error();
 
     /**
-     * @return
+     * @return Response
      */
     @PostMapping("/getAllCurrencies")
     @HystrixCommand
@@ -46,7 +43,7 @@ public class FinController {
     }
 
     /**
-     * @return
+     * @return Response
      */
     @PostMapping("/getUserCurrencies")
     @HystrixCommand
@@ -130,7 +127,7 @@ public class FinController {
         return response;
     }
 
-    @DeleteMapping("deleteCurrency")
+    @DeleteMapping("/deleteCurrency")
     @HystrixCommand
     public Response deleteCurrency(@RequestBody Request request){
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -153,7 +150,7 @@ public class FinController {
         return response;
     }
 
-    @PostMapping("setDefaultCurrency")
+    @PostMapping("/setDefaultCurrency")
     @HystrixCommand
     public Response setDefaultCurrency(@RequestBody Request request){
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -178,7 +175,7 @@ public class FinController {
 
     @PostMapping("/getRateForDate")
     @HystrixCommand
-    public Response getRateForDate(@RequestBody Request request) throws ParseException {
+    public Response getRateForDate(@RequestBody Request request)  {
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
         Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
         data = new Data();
@@ -197,7 +194,7 @@ public class FinController {
 
     @PostMapping("/getActualRates")
     @HystrixCommand
-    public Response getActualRates(@RequestBody Request request) throws ParseException {
+    public Response getActualRates(@RequestBody Request request) {
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
         Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
         data = new Data();
@@ -235,7 +232,7 @@ public class FinController {
 
     @PostMapping("/login")
     @HystrixCommand
-    public Response login(@RequestBody Request request) throws RequestException, UserNotFoundException, NoSuchAlgorithmException {
+    public Response login(@RequestBody Request request) {
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
         Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
         data = new Data();
@@ -343,6 +340,23 @@ public class FinController {
         finService.writeResponseLog(log, method, request.getSessionKey(), response);
         return response;
     }
+    
+    @DeleteMapping("/deleteWallet")
+    @HystrixCommand
+    public Response deleteWallet(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            finService.deleteWallet(request.getSessionKey(), request.getWalletId());
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
 
     @PutMapping("/addWallet")
     @HystrixCommand
@@ -363,7 +377,7 @@ public class FinController {
         return response;
     }
 
-    @PostMapping("setDefaultWallet")
+    @PostMapping("/setDefaultWallet")
     @HystrixCommand
     public Response setDefaultWallet(@RequestBody Request request){
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -449,7 +463,7 @@ public class FinController {
         response = new Response();
         try {
             if (request.getSessionKey() == null) throw new RequestException();
-            data.setCategory(finService.getCategoryById(request.getCategoryId()));
+            data.setCategory(finService.getCategoryById(request.getCategoryId(), request.getSessionKey()));
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
@@ -468,7 +482,7 @@ public class FinController {
         response = new Response();
         try {
             if (request.getSessionKey() == null) throw new RequestException();
-            data.setSubCategory(finService.getSubCategoryById(request.getSubCategoryId()));
+            data.setSubCategory(finService.getSubCategoryById(request.getSubCategoryId(), request.getSessionKey()));
             response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
@@ -523,6 +537,23 @@ public class FinController {
         return response;
     }
 
+    @DeleteMapping("/deleteCategory")
+    @HystrixCommand
+    public Response deleteCategory(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            finService.deleteCategory(request.getSessionKey(), request.getCategoryId());
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
     @PutMapping("/addSubCategory")
     @HystrixCommand
     public Response addSubCategory(@RequestBody Request request){
@@ -547,11 +578,26 @@ public class FinController {
         return response;
     }
 
-
+    @DeleteMapping("/deleteSubCategory")
+    @HystrixCommand
+    public Response deleteSubCategory(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            finService.deleteSubCategory(request.getSessionKey(), request.getSubCategoryId());
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
 
     @PutMapping("/addTransaction")
     @HystrixCommand
-    public Response addTransaction(@RequestBody Request request) throws ParseException {
+    public Response addTransaction(@RequestBody Request request) {
         String method = Thread.currentThread().getStackTrace()[1].getMethodName();
         Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
         data = new Data();

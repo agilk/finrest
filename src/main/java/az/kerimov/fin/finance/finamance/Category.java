@@ -21,6 +21,17 @@ public class Category {
     @Column(name = "is_debt")
     private boolean debt;
 
+    @Column(name = "is_active")
+    private boolean active;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public Integer getId() {
         return id;
     }

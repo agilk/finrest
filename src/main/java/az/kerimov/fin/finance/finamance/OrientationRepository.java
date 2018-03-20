@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrientationRepository extends JpaRepository<Orientation, Integer> {
-    public Orientation findById(Integer id);
-    public Orientation findByCode(String code);
+    Orientation findById(Integer id);
+    //Orientation findByCode(String code);
 
 }

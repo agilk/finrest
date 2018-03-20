@@ -7,7 +7,6 @@ import java.util.List;
 
 @Repository
 public interface SubCategoryRepository extends JpaRepository<SubCategory, Integer>{
-    public List<SubCategory> findByUserAndCategory(User user, Category category);
-
-    public SubCategory findById(Integer id);
+    List<SubCategory> findByUserAndCategoryAndActiveIsTrue(User user, Category category);
+    SubCategory findByIdAndUser(Integer id, User user);
 }
