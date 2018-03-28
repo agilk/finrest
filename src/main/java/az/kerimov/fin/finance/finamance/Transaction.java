@@ -33,6 +33,29 @@ public class Transaction {
     @JoinColumn(name = "currency_id")
     private UserCurrency currency;
 
+    @ManyToOne
+    @JoinColumn(name = "orientation_id")
+    private Orientation orientation;
+
+    @ManyToOne
+    @JoinColumn(name = "rate_transaction")
+    private Rate rateTransaction;
+
+    @ManyToOne
+    @JoinColumn(name = "rate_wallet")
+    private Rate rateWallet;
+
+    @ManyToOne
+    @JoinColumn(name = "rate_wallet_other")
+    private Rate rateWalletOther;
+
+    @ManyToOne
+    @JoinColumn(name = "rate_usd")
+    private Rate rateUsd;
+
+    @JoinColumn(name = "amount_usd")
+    private Double amountUsd;
+
     private Double amount;
 
     private String notes;
@@ -137,5 +160,53 @@ public class Transaction {
 
     public void setAdded(Date added) {
         this.added = added;
+    }
+
+    public Orientation getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(Orientation orientation) {
+        this.orientation = orientation;
+    }
+
+    public Rate getRateTransaction() {
+        return rateTransaction;
+    }
+
+    public void setRateTransaction(Rate rateTransaction) {
+        this.rateTransaction = rateTransaction;
+    }
+
+    public Rate getRateWallet() {
+        return rateWallet;
+    }
+
+    public void setRateWallet(Rate rateWallet) {
+        this.rateWallet = rateWallet;
+    }
+
+    public Rate getRateWalletOther() {
+        return rateWalletOther;
+    }
+
+    public void setRateWalletOther(Rate rateWalletOther) {
+        this.rateWalletOther = rateWalletOther;
+    }
+
+    public Rate getRateUsd() {
+        return rateUsd;
+    }
+
+    public void setRateUsd(Rate rateUsd) {
+        this.rateUsd = rateUsd;
+    }
+
+    public Double getAmountUsd() {
+        return amountUsd;
+    }
+
+    public void setAmountUsd(Double amountUsd) {
+        this.amountUsd = amountUsd;
     }
 }

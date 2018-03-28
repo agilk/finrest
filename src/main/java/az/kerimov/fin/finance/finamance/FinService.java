@@ -87,7 +87,7 @@ public class FinService {
     }
 
     public Rate getRateForDate(String sessionKey, String currencyCode, String date) throws ParseException, UserNotFoundException {
-        return getRateForDate(userCurrencyRepository.findByUserAndCurrency(
+        return getRateForDate(userCurrencyRepository.findByUserAndCurrencyAndActiveIsTrue(
                 getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode)
         ), date);
     }
@@ -111,7 +111,7 @@ public class FinService {
     }
 
     public void addRate(String sessionKey, String currencyCode, String date, Double rate) throws UserNotFoundException {
-        addRate(userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode)), date, rate);
+        addRate(userCurrencyRepository.findByUserAndCurrencyAndActiveIsTrue(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode)), date, rate);
     }
 
     public List<Currency> getAllCurrencies() {
@@ -123,7 +123,7 @@ public class FinService {
     }
 
     public UserCurrency getUserCurrencyByCode(String sessionKey, String code) throws UserNotFoundException {
-        return userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(code));
+        return userCurrencyRepository.findByUserAndCurrencyAndActiveIsTrue(getUserBySessionKey(sessionKey), currencyRepository.findByCode(code));
     }
 
     private Integer addCurrency(UserCurrency currency) throws AddCurrencyException {
@@ -140,7 +140,7 @@ public class FinService {
         currency.setUser(getUserBySessionKey(sessionKey));
         currency.setCurrency(currencyRepository.findByCode(currencyCode));
         currency.setActive(true);
-        UserCurrency existCurr = userCurrencyRepository.findByUserAndCurrency(currency.getUser(), currency.getCurrency());
+        UserCurrency existCurr = userCurrencyRepository.findByUserAndCurrencyAndActiveIsTrue(currency.getUser(), currency.getCurrency());
         if (existCurr != null){
             currency.setId(existCurr.getId());
         }
@@ -163,7 +163,7 @@ public class FinService {
     }
 
     public void setDefaultCurrency(String sessionKey, String currencyCode) throws UserNotFoundException {
-        UserCurrency currency = userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode));
+        UserCurrency currency = userCurrencyRepository.findByUserAndCurrencyAndActiveIsTrue(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode));
         setDefaultCurrency(currency);
     }
 
@@ -174,7 +174,7 @@ public class FinService {
     }
 
     public void deleteCurrency(String sessionKey, String currencyCode) throws UserNotFoundException{
-        UserCurrency currency = userCurrencyRepository.findByUserAndCurrency(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode));
+        UserCurrency currency = userCurrencyRepository.findByUserAndCurrencyAndActiveIsTrue(getUserBySessionKey(sessionKey), currencyRepository.findByCode(currencyCode));
         deleteCurrency(currency);
     }
 
@@ -421,6 +421,12 @@ public class FinService {
 
 
     private Integer addTransaction(Transaction transaction) throws ParseException {
+        TransactionDetails transactionDetails = getTransactionDetails(transaction);
+        transaction.setRateTransaction(transactionDetails.getRateTransaction());
+        transaction.setRateWallet(transactionDetails.getRateWallet());
+        transaction.setRateWalletOther(transactionDetails.getRateWalletOther());
+        transaction.setRateUsd(transactionDetails.getRateUsd());
+        transaction.setAmountUsd(transactionDetails.getAmountUsd());
         transactionRepository.save(transaction);
         Double balanceChange = calculateTransactionAmount(transaction, true);
         changeWalletBalance(transaction.getWallet(), transaction.getWallet().getBalanceAmount() - balanceChange);
@@ -458,6 +464,7 @@ public class FinService {
         if (walletIdOther != null) {
             transaction.setWalletOther(getWalletById(walletIdOther, getUserBySessionKey(sessionKey)));
         }
+        transaction.setOrientation(transaction.getCategory().getOrientation());
         return addTransaction(transaction);
     }
 
@@ -483,5 +490,43 @@ public class FinService {
         Double amount = transaction.getAmount();
 
         return amount*rate*sign;
+    }
+
+
+    private TransactionDetails getTransactionDetails(Transaction transaction) throws ParseException {
+        TransactionDetails transactionDetails = new TransactionDetails();
+        transactionDetails.setOrientationSign(transaction.getCategory().getOrientation().getSign());
+
+        UserCurrency walletCurrency = transaction.getWallet().getCurrency();
+
+
+        UserCurrency transactionCurrency = transaction.getCurrency();
+
+        String rateDate = dfTransaction.format(transaction.getCtime());
+
+        transactionDetails.setRateWallet(getRateForDate(walletCurrency, rateDate));
+
+        transactionDetails.setRateTransaction(getRateForDate(transactionCurrency, rateDate));
+
+        transactionDetails.setAmountWallet(transaction.getAmount()*transactionDetails.getOrientationSign()*transactionDetails.getRateTransaction().getRate()/transactionDetails.getRateWallet().getRate());
+
+        if (transaction.getWalletOther() != null){
+            UserCurrency walletOtherCurrency = transaction.getWalletOther().getCurrency();
+            transactionDetails.setRateWalletOther(getRateForDate(walletOtherCurrency, rateDate));
+            transactionDetails.setAmountWalletOther(transaction.getAmount() * transactionDetails.getOrientationSign() * transactionDetails.getRateTransaction().getRate() / transactionDetails.getRateWalletOther().getRate());
+        }
+
+        Currency usd = currencyRepository.findByCode("840");
+        UserCurrency userUsd = null;
+        if (usd!= null) {
+            userUsd = userCurrencyRepository.findByUserAndCurrencyAndActiveIsTrue(transaction.getUser(), usd);
+        }
+
+        if (userUsd != null) {
+            transactionDetails.setRateUsd(getRateForDate(userUsd, rateDate));
+            transactionDetails.setAmountUsd(transaction.getAmount() * transactionDetails.getOrientationSign() * transactionDetails.getRateTransaction().getRate() / transactionDetails.getRateUsd().getRate());
+        }
+
+        return transactionDetails;
     }
 }

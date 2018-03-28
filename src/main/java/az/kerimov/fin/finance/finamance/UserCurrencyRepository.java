@@ -9,5 +9,5 @@ import java.util.List;
 public interface UserCurrencyRepository extends JpaRepository<UserCurrency, Integer>{
     List<UserCurrency> findAllByUserAndActiveIsTrue(User user);
     List<UserCurrency> findAllByUserAndActiveIsTrueAndDefaultElementIsTrue(User user);
-    UserCurrency findByUserAndCurrency(User user, Currency currency);
+    UserCurrency findByUserAndCurrencyAndActiveIsTrue(User user, Currency currency);
 }
