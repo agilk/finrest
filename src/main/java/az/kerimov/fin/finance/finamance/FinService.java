@@ -103,9 +103,13 @@ public class FinService {
     }
 
     private void addRate(UserCurrency currency, String date, Double rate) {
-        Rate result = new Rate();
-        result.setCurrency(currency);
-        result.setCtime(date);
+        Rate result;
+        result = rateRepository.findByCurrencyAndCtime(currency, date);
+        if (result == null){
+            result = new Rate();
+            result.setCurrency(currency);
+            result.setCtime(date);
+        }
         result.setRate(rate);
         rateRepository.save(result);
     }
@@ -271,6 +275,14 @@ public class FinService {
         return getUserWallets(user);
     }
 
+    private List<Wallet> getUserInActiveWallets(User user){
+        return walletRepository.findByUserAndActiveIsFalse(user);
+    }
+
+    public List<Wallet> getUserInActiveWallets(String sessionKey) throws UserNotFoundException {
+        return getUserInActiveWallets(getUserBySessionKey(sessionKey));
+    }
+
     private void deleteWallet(Wallet wallet){
         wallet.setActive(false);
         walletRepository.save(wallet);
@@ -284,6 +296,10 @@ public class FinService {
         wallet.setActive(true);
         walletRepository.save(wallet);
         return wallet.getId();
+    }
+
+    public Integer activateWallet(String sessionKey, Integer walletId) throws UserNotFoundException {
+        return addWallet(getWalletById(sessionKey, walletId));
     }
 
     public Integer addWallet(String sessionKey, String currencyCode, String customName) throws UserNotFoundException {

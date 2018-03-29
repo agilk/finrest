@@ -340,7 +340,43 @@ public class FinController {
         finService.writeResponseLog(log, method, request.getSessionKey(), response);
         return response;
     }
-    
+
+    @PostMapping("/getUserInactiveWallets")
+    @HystrixCommand
+    public Response getUserInactiveWallets(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            data.setWallets(finService.getUserInActiveWallets(request.getSessionKey()));
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
+    @PostMapping("/activateWallet")
+    @HystrixCommand
+    public Response activateWallet(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            data.setNewId(finService.activateWallet(request.getSessionKey(), request.getWalletId()));
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
     @DeleteMapping("/deleteWallet")
     @HystrixCommand
     public Response deleteWallet(@RequestBody Request request) {

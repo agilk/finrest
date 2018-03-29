@@ -8,6 +8,7 @@ import java.util.List;
 @Repository
 public interface WalletRepository extends JpaRepository<Wallet, Integer>{
     List<Wallet> findByUserAndActiveIsTrue(User user);
+    List<Wallet> findByUserAndActiveIsFalse(User user);
     List<Wallet> findAllByUserAndDefaultElementIsTrue(User user);
     Wallet findByIdAndUser(Integer id, User user);
     //Wallet findById(Integer id);
