@@ -42,6 +42,8 @@ public class FinService {
     @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
+    private TransactionReportRepository transactionReportRepository;
+    @Autowired
     private UserCurrencyRepository userCurrencyRepository;
 
     private DateFormat df = new SimpleDateFormat("yyyyMMdd");
@@ -435,6 +437,20 @@ public class FinService {
         return addSubCategory(subCategory);
     }
 
+    private List<TransactionReport> getLastTransactions(User user) {
+        List<TransactionReport> list = transactionReportRepository.findAllByUserOrderByIdDesc(user);
+        if (list.size() > 10) {
+            for (int i = 10; i < list.size(); i++) {
+                list.remove(i);
+
+            }
+        }
+        return list;
+    }
+
+    public List<TransactionReport> getLastTransactions(String sessionKey) throws UserNotFoundException {
+        return getLastTransactions(getUserBySessionKey(sessionKey));
+    }
 
     private Integer addTransaction(Transaction transaction) throws ParseException {
         TransactionDetails transactionDetails = getTransactionDetails(transaction);

@@ -24,6 +24,8 @@ public class Data {
     private SubCategory subCategory;
     private List<SubCategory> subCategories;
 
+    private List<TransactionReport> transactions;
+
     public List<UserCurrency> getCurrencies() {
         return currencies;
     }
@@ -150,5 +152,13 @@ public class Data {
 
     public void setSysCurrencies(List<Currency> sysCurrencies) {
         this.sysCurrencies = sysCurrencies;
+    }
+
+    public List<TransactionReport> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<TransactionReport> transactions) {
+        this.transactions = transactions;
     }
 }

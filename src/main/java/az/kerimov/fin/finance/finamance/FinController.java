@@ -9,6 +9,8 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 public class FinController {
@@ -623,6 +625,26 @@ public class FinController {
         response = new Response();
         try {
             finService.deleteSubCategory(request.getSessionKey(), request.getSubCategoryId());
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
+    @PostMapping("/getLastTransactions")
+    @HystrixCommand
+    public Response getLastTransactions(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            data.setTransactions(
+                finService.getLastTransactions(request.getSessionKey())
+            );
+            response.setData(data);
         } catch (Exception ex) {
             error = new Error(ex, request.getLang());
             response.setError(error);
