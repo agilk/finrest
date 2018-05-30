@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface TransactionReportRepository extends JpaRepository<TransactionReport, Integer> {
     List<TransactionReport> findAllByUserOrderByIdDesc(User user);
+    List<TransactionReport> findAllByUserAndCdateBetween(User user, String begDate, String endDate);
 }

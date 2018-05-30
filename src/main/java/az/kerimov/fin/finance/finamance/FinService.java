@@ -452,6 +452,14 @@ public class FinService {
         return getLastTransactions(getUserBySessionKey(sessionKey));
     }
 
+    private List<TransactionReport> getTransactionsBetweenDates(User user, String begDate, String endDate){
+        return transactionReportRepository.findAllByUserAndCdateBetween(user, begDate, endDate);
+    }
+
+    public List<TransactionReport> getTransactionsBetweenDates(String sessionKey, String begDate, String endDate) throws UserNotFoundException {
+        return getTransactionsBetweenDates(getUserBySessionKey(sessionKey), begDate, endDate);
+    }
+
     private Integer addTransaction(Transaction transaction) throws ParseException {
         TransactionDetails transactionDetails = getTransactionDetails(transaction);
         transaction.setRateTransaction(transactionDetails.getRateTransaction());
