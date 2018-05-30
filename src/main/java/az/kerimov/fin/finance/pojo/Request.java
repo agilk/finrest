@@ -35,6 +35,8 @@ public class Request {
     private String date;
     private Integer walletIdOther;
     private Integer transactionId;
+    private String startDate;
+    private String endDate;
 
     //Common
     private String lang;
@@ -263,5 +265,21 @@ public class Request {
 
     public void setDefault(Boolean defaultElement) {
         this.defaultElement = defaultElement;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
     }
 }
