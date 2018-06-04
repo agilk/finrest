@@ -5,6 +5,7 @@ import az.kerimov.fin.finance.exception.UserNotFoundException;
 import az.kerimov.fin.finance.pojo.Request;
 import az.kerimov.fin.finance.pojo.Response;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,8 @@ public class FinService {
     private CategoryRepository categoryRepository;
     @Autowired
     private SubCategoryRepository subCategoryRepository;
+    @Autowired
+    private SubCategoryVRepository subCategoryVRepository;
     @Autowired
     private OrientationRepository orientationRepository;
     @Autowired
@@ -359,7 +362,16 @@ public class FinService {
     }
 
     private List<SubCategory> getSubCategories(User user, Category category) {
-        return subCategoryRepository.findByUserAndCategoryAndActiveIsTrue(user, category);
+        List<SubCategory> res = new ArrayList<>();
+        List<SubCategoryV> vCats = subCategoryVRepository.findByUserAndCategoryAndActiveIsTrueOrderByTransactionsDesc(user, category);
+
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        String jsonString = gson.toJson(vCats);
+        res = gson.fromJson(jsonString, List.class);
+
+        return res;
+
+        //return subCategoryRepository.findByUserAndCategoryAndActiveIsTrue(user, category);
     }
 
     public List<SubCategory> getSubCategories(String sessionKey, Integer categoryId) throws UserNotFoundException {
