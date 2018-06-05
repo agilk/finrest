@@ -451,13 +451,16 @@ public class FinService {
 
     private List<TransactionReport> getLastTransactions(User user) {
         List<TransactionReport> list = transactionReportRepository.findAllByUserOrderByIdDesc(user);
-        if (list.size() > 10) {
-            for (int i = 10; i < list.size(); i++) {
-                list.remove(i);
-
-            }
+        List<TransactionReport> result = new ArrayList<>();
+        int max = 10;
+        if (list.size() < 10) {
+            max = list.size();
         }
-        return list;
+
+        for (int i = 10; i < max; i++) {
+            result.add(list.get(i));
+        }
+        return result;
     }
 
     public List<TransactionReport> getLastTransactions(String sessionKey) throws UserNotFoundException {
