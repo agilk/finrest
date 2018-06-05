@@ -457,7 +457,7 @@ public class FinService {
             max = list.size();
         }
 
-        for (int i = 10; i < max; i++) {
+        for (int i = 0; i < max; i++) {
             result.add(list.get(i));
         }
         return result;
