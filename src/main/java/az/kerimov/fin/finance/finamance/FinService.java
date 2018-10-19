@@ -463,6 +463,30 @@ public class FinService {
         return result;
     }
 
+    private List<Report> getReportList(User user){
+        List<Report> reports = new ArrayList<>();
+        Report report = new Report();
+        report.setId(1);
+        report.setName("getTransactionsBetweenDates");
+        List<ReportParam> params = new ArrayList<>();
+        ReportParam param = new ReportParam();
+        param.setName("startDate");
+        param.setLabel("Start Date");
+        param.setType("date");
+        params.add(param);
+        param.setName("endDate");
+        param.setLabel("End Date");
+        param.setType("date");
+        params.add(param);
+        report.setParamList(params);
+        reports.add(report);
+        return reports;
+    }
+
+    public List<Report> getReportList(String sessionKey) throws UserNotFoundException {
+        return getReportList(getUserBySessionKey(sessionKey));
+    }
+
     public List<TransactionReport> getLastTransactions(String sessionKey) throws UserNotFoundException {
         return getLastTransactions(getUserBySessionKey(sessionKey));
     }

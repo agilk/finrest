@@ -26,6 +26,8 @@ public class Data {
 
     private List<TransactionReport> transactions;
 
+    private List<Report> reports;
+
     public List<UserCurrency> getCurrencies() {
         return currencies;
     }
@@ -160,5 +162,13 @@ public class Data {
 
     public void setTransactions(List<TransactionReport> transactions) {
         this.transactions = transactions;
+    }
+
+    public List<Report> getReports() {
+        return reports;
+    }
+
+    public void setReports(List<Report> reports) {
+        this.reports = reports;
     }
 }

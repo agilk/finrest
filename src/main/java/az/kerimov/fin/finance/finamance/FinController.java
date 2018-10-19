@@ -653,6 +653,26 @@ public class FinController {
         return response;
     }
 
+    @PostMapping("/getReportList")
+    @HystrixCommand
+    public Response getReportList(@RequestBody Request request) {
+        String method = Thread.currentThread().getStackTrace()[1].getMethodName();
+        Log log = finService.writeRequestLog(method, request.getSessionKey(), request);
+        data = new Data();
+        response = new Response();
+        try {
+            data.setReports(
+                    finService.getReportList(request.getSessionKey())
+            );
+            response.setData(data);
+        } catch (Exception ex) {
+            error = new Error(ex, request.getLang());
+            response.setError(error);
+        }
+        finService.writeResponseLog(log, method, request.getSessionKey(), response);
+        return response;
+    }
+
     @PostMapping("/getTransactionsBetweenDates")
     @HystrixCommand
     public Response getTransactionsBetweenDates(@RequestBody Request request) {
