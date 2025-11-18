@@ -49,8 +49,9 @@ All API endpoints follow a consistent wrapper pattern:
 
 ### Three-Layer Architecture
 1. **Controller Layer** (`FinController.java`)
-   - Single controller with 40+ REST endpoints
+   - Single controller with 35 REST endpoints
    - All methods follow pattern: log request → validate session → call service → handle errors → log response
+   - Uses @PostMapping (27), @PutMapping (4), and @DeleteMapping (4) annotations
    - Location: `src/main/java/az/kerimov/fin/finance/finamance/FinController.java`
 
 2. **Service Layer** (`FinService.java`)
@@ -60,7 +61,7 @@ All API endpoints follow a consistent wrapper pattern:
    - Location: `src/main/java/az/kerimov/fin/finance/finamance/FinService.java`
 
 3. **Repository Layer**
-   - 15 Spring Data JPA repositories for database access
+   - 14 Spring Data JPA repositories for database access
    - Standard repository naming: `[Entity]Repository.java`
    - Location: `src/main/java/az/kerimov/fin/finance/finamance/`
 
@@ -71,7 +72,10 @@ Key entity relationships:
 - **User** → has many **Transaction** → references **Wallet**, **SubCategory**, **Orientation** (income/expense)
 - **Category** → has many **SubCategory** (nested transaction categories)
 - **Currency** → has many **Rate** (exchange rates by date, format: yyyyMMdd)
-- **TransactionReport** is a database view for transaction querying
+
+Database views (read-only entities):
+- **TransactionReport** (`f_fn_all_transaction`) - Flattened view for transaction querying and reporting
+- **SubCategoryV** (`v_fn_sub_categories`) - View with transaction counts per subcategory (uses @Expose for Gson serialization)
 
 ### Multi-Currency & Exchange Rates
 - Users can add multiple currencies via **UserCurrency** (marked active/inactive)
@@ -95,10 +99,14 @@ Custom exceptions in `az.kerimov.fin.finance.exception/`:
 - `RequestException` - Invalid request parameters
 - `UserExistsException` - Duplicate user creation
 
-All exceptions are caught by controllers and converted to Error responses with language-specific messages.
+All exceptions are caught by controllers and converted to Error responses with language-specific messages via the **CustomError** entity:
+- CustomError entity provides localized error messages based on exception type and language
+- CustomErrorRepository methods: `findByExceptionAndLang()` and `findByExceptionAndParamsAndLang()`
+- Error messages support parameterization for dynamic content
 
 ## Database Configuration
-- Database connection configured via Spring Boot properties (application.properties/yml)
+- No application.properties or application.yml files in the project
+- Database connection likely configured via environment variables, system properties, or external configuration
 - Uses MySQL Connector 6.0.6
 - JPA auto-configuration handles schema generation
 - No migration scripts currently (Hibernate schema auto-update)
@@ -111,12 +119,23 @@ All exceptions are caught by controllers and converted to Error responses with l
 - Spring Actuator enabled for application metrics
 
 ## API Endpoint Groups
-- **Auth**: /login, /logoff, /changePassword
-- **Currency**: /getAllCurrencies, /getUserCurrencies, /addCurrency, /deleteCurrency, /setDefaultCurrency, /getActualRates, /addRate
-- **Wallet**: /getUserWallets, /addWallet, /deleteWallet, /activateWallet, /setDefaultWallet, /changeWalletBalance
-- **Category**: /getCategories, /addCategory, /deleteCategory
-- **SubCategory**: /getSubCategories, /addSubCategory, /deleteSubCategory
-- **Transaction**: /addTransaction, /getLastTransactions, /getTransactionsBetweenDates
-- **Report**: /getReportList, /getOrientations
 
-All endpoints use POST method (including operations that semantically should be GET/PUT/DELETE).
+All 35 endpoints use @HystrixCommand for fault tolerance. HTTP methods: 27 POST, 4 PUT, 4 DELETE.
+
+- **Auth** (POST): /login, /logoff, /changePassword
+- **User** (POST): /getUserBySession
+- **Currency** (POST): /getAllCurrencies, /getUserCurrencies, /getCurrencyByCode, /setDefaultCurrency, /getActualRates, /getRateForDate
+- **Currency** (PUT): /addCurrency, /addRate
+- **Currency** (DELETE): /deleteCurrency
+- **Wallet** (POST): /getUserWallets, /getUserInactiveWallets, /getWalletById, /activateWallet, /setDefaultWallet, /changeWalletBalance
+- **Wallet** (PUT): /addWallet
+- **Wallet** (DELETE): /deleteWallet
+- **Category** (POST): /getCategories, /getCategoryById
+- **Category** (PUT): /addCategory
+- **Category** (DELETE): /deleteCategory
+- **SubCategory** (POST): /getSubCategories, /getSubCategoryById
+- **SubCategory** (PUT): /addSubCategory
+- **SubCategory** (DELETE): /deleteSubCategory
+- **Transaction** (PUT): /addTransaction
+- **Transaction** (POST): /getLastTransactions (retrieves last 10), /getTransactionsBetweenDates
+- **Report** (POST): /getReportList, /getOrientations
